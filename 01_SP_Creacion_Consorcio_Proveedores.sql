@@ -1,7 +1,19 @@
+/*  Importar archivo xlsx
+13-11-2025
+ComisiÃ³n 3641 
+Grupo 01 
+Bases de datos aplicada
+Alumno                      | DNI
+Pereyra, Facundo Gabriel    | 43105379
+Roldan, Francisco MartÃ­n    | 42426768
+Zotelo, Julian Lorenzo      | 42536473
+
+*/
+
 USE Com3641G01;
 GO
 
-CREATE OR ALTER PROCEDURE dbo.SP_Creacion_Consorcio_TipoGastos(
+CREATE OR ALTER PROCEDURE dbo.SP_Creacion_Consorcio_Proveerdores(
     @Ruta NVARCHAR(500),
     @NombreArchivo NVARCHAR(255)
 )
@@ -37,7 +49,7 @@ BEGIN
         EXEC sp_executesql @sql;
 
         IF NOT EXISTS (SELECT 1 FROM #ValidarConsorcios)
-            THROW 50000, 'No se encontró la hoja [Consorcios$] en el archivo Excel.', 1;
+            THROW 50000, 'No se encontrï¿½ la hoja [Consorcios$] en el archivo Excel.', 1;
 
         -- Validar existencia de la hoja Proveedores
         IF OBJECT_ID('tempdb..#ValidarProveedores') IS NOT NULL DROP TABLE #ValidarProveedores;
@@ -60,7 +72,7 @@ BEGIN
         EXEC sp_executesql @sql;
 
         IF NOT EXISTS (SELECT 1 FROM #ValidarProveedores)
-            THROW 50001, 'No se encontró la hoja [Proveedores$] en el archivo Excel.', 1;
+            THROW 50001, 'No se encontrï¿½ la hoja [Proveedores$] en el archivo Excel.', 1;
 
         -- Cargar Consorcios
         IF OBJECT_ID('tempdb..#ConsorciosExcel') IS NOT NULL DROP TABLE #ConsorciosExcel;
@@ -119,7 +131,7 @@ BEGIN
         ';
         EXEC sp_executesql @sql;
 
-        -- Insertar categorías de gasto ordinario
+        -- Insertar categorï¿½as de gasto ordinario
         INSERT INTO CategoriaGastoOrdinario (nombre)
         SELECT DISTINCT F1
         FROM #ProveedoresExcel AS P
@@ -150,7 +162,7 @@ BEGIN
             );
         END;
 
-        -- Insertar relación Consorcio-Proveedor
+        -- Insertar relaciï¿½n Consorcio-Proveedor
         INSERT INTO ConsorcioProveedor (ID_Proveedores, ID_consorcio)
         SELECT
             pr.ID_Proveedores,
@@ -188,6 +200,6 @@ END;
 GO
 
 
-EXEC dbo.SP_Creacion_Consorcio_TipoGastos
+EXEC dbo.SP_Creacion_Consorcio_Proveerdores
     @Ruta = N'C:\TEMP\TP_DB',
     @NombreArchivo = N'datos varios.xlsx';

@@ -1,3 +1,15 @@
+/*  Importar Uf por consorcio.txt
+13-11-2025
+Comisión 3641 
+Grupo 01 
+Bases de datos aplicada
+Alumno                      | DNI
+Pereyra, Facundo Gabriel    | 43105379
+Roldan, Francisco Martín    | 42426768
+Zotelo, Julian Lorenzo      | 42536473
+
+*/
+
 USE Com3641G01;
 GO
 
@@ -75,7 +87,7 @@ BEGIN
         TRY_CAST(REPLACE(T.Coeficiente, ',', '.') AS DECIMAL(6,4)),
         CASE WHEN UPPER(T.Cochera) = 'SI' THEN 1 ELSE 0 END,
         CASE WHEN UPPER(T.Bauleras) = 'SI' THEN 1 ELSE 0 END,
-        TRY_CAST(REPLACE(T.m2_Unidad_Funcional, ',', '.') AS DECIMAL(8,2))
+        TRY_CAST(REPLACE(T.m2_UnidadFuncional, ',', '.') AS DECIMAL(8,2))
     FROM dbo.Tmp_UnidadesFuncionales T
     INNER JOIN Consorcios C ON C.nombre = T.NombreConsorcio
     WHERE NOT EXISTS (
@@ -162,6 +174,7 @@ GO
 EXEC dbo.SP_Cargar_UnidadesFuncionales 
     @Ruta = 'C:\TEMP\TP_DB',
     @NombreArchivo = 'UF por consorcio.txt';
+
 
 
  

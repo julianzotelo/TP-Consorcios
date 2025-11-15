@@ -1,14 +1,15 @@
-/*Todos los archivos fuentes (de cualquier tipo) que se entreguen deben comenzar con un
-comentario donde conste el enunciado (la parte que se está cumplimentando), fecha de
-entrega, número de comisión, número de grupo, nombre de la materia, nombres y DNI de los
-alumnos.
+/*  Create DB y tablas
+13-11-2025
+ComisiÃ³n 3641 
+Grupo 01 
+Bases de datos aplicada
+Alumno                      | DNI
+Pereyra, Facundo Gabriel    | 43105379
+Roldan, Francisco MartÃ­n    | 42426768
+Zotelo, Julian Lorenzo      | 42536473
+
 */
 
-/*Cada grupo deberá generar una DB con un nombre distinto. Para ello usarán el nombre de la
-comisión y del grupo como denominador de la DB. Por ejemplo “Com3900G02”. El formato
-es ComXXXXGYY donde XXXX es el código de comisión e YY es el número de grupo con
-cero a la izquierda de ser necesario.
-*/
 IF DB_ID('Com3641G01') IS NULL
 BEGIN
     PRINT 'Creando base de datos Com3641G01...';
@@ -16,7 +17,7 @@ BEGIN
 END
 ELSE
 BEGIN
-    PRINT 'La base Com3641G01 ya existe. Se utilizará la existente.';
+    PRINT 'La base Com3641G01 ya existe. Se utilizarï¿½ la existente.';
 END;
 GO
 
@@ -165,10 +166,11 @@ BEGIN TRY
     CREATE TABLE Gastos (
     ID_gastos INT IDENTITY(1,1) PRIMARY KEY,
     ID_consorcio INT NOT NULL,
-    ID_tipo_gasto INT NOT NULL,
+    ID_tipo_gasto INT NULL,
     ID_categoria INT NULL,
     monto_total DECIMAL(10,2),
     concepto VARCHAR(100),
+    mes varchar(20),
     fecha DATE,
     CONSTRAINT FK_Gastos_Consorcios FOREIGN KEY (ID_consorcio)
         REFERENCES Consorcios(ID_consorcio) 
@@ -223,17 +225,19 @@ BEGIN TRY
 	);
 
 
-	PRINT 'Creando tabla PropietarioInquilino...';
+CREATE TABLE PropietarioInquilino (
+    ID_PropietarioInquilino INT IDENTITY(1,1) PRIMARY KEY,
+    DNI INT NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    email VARCHAR(100),
+    telefono VARCHAR(30),
+    CVU_CBU CHAR(22) NOT NULL,
+    inquilino BIT NOT NULL,
+    CONSTRAINT UQ_PropietarioInquilino_DNI_CBU UNIQUE (DNI, CVU_CBU)
+);
 
-    CREATE TABLE PropietarioInquilino (
-        DNI INT IDENTITY(1,1) PRIMARY KEY,
-        nombre VARCHAR(50) NOT NULL,
-        apellido VARCHAR(50) NOT NULL,
-        email VARCHAR(100),
-        telefono VARCHAR(30),
-        CVU_CBU CHAR(22),
-        inquilino BIT NOT NULL
-    );
+
 
 	PRINT 'Creando tabla Unidad_funcional...';
 
@@ -258,14 +262,14 @@ CREATE TABLE Unidad_funcional (
 	CREATE TABLE UnidadFuncionalPersona (
     ID_unidad_funcional INT NOT NULL,
     ID_consorcio INT NOT NULL,
-    DNI INT NOT NULL,
+    ID_PropietarioInquilino INT NOT NULL,
     rol VARCHAR(20) CHECK (rol IN ('PROPIETARIO', 'INQUILINO')),
     fecha_desde DATE,
     fecha_hasta DATE,
-    PRIMARY KEY (ID_unidad_funcional, ID_consorcio, DNI, rol),
+    PRIMARY KEY (ID_unidad_funcional, ID_consorcio, ID_PropietarioInquilino, rol),
     FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
         REFERENCES Unidad_funcional(ID_unidad_funcional, ID_consorcio),
-    FOREIGN KEY (DNI) REFERENCES PropietarioInquilino(DNI)
+    FOREIGN KEY (ID_PropietarioInquilino) REFERENCES PropietarioInquilino(ID_PropietarioInquilino)
 );
 
 
@@ -395,7 +399,7 @@ CREATE TABLE Pagos_importados (
 
 END TRY
 BEGIN CATCH
-    PRINT 'Error durante la creación de tablas:';
+    PRINT 'Error durante la creaciï¿½n de tablas:';
     PRINT ERROR_MESSAGE();
 END CATCH;
 GO
