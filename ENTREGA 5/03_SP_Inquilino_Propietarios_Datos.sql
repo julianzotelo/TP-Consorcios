@@ -83,12 +83,6 @@ GO
 
 
 
---------------------------------
-
-EXEC Importar_Inquilinos @RutaArchivo = 'C:\TEMP\TP_DB\Inquilino-propietarios-datos.csv';
-
-
-
 
 
 

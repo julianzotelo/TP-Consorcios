@@ -9,7 +9,6 @@ Roldan, Francisco Martín    | 42426768
 Zotelo, Julian Lorenzo      | 42536473
 
 */
-
 USE Com3641G01;
 GO
 
@@ -24,8 +23,17 @@ BEGIN
     DECLARE @Archivo NVARCHAR(1000) = @Ruta + '\' + @NombreArchivo;
     DECLARE @sql NVARCHAR(MAX);
 
+    -- Contadores
+    DECLARE 
+        @CountConsorcios INT = 0,
+        @CountCategorias INT = 0,
+        @CountProveedores INT = 0,
+        @CountConsorcioProveedor INT = 0;
+
     BEGIN TRY
         BEGIN TRANSACTION;
+
+
 
         -- Validar existencia de la hoja Consorcios
         IF OBJECT_ID('tempdb..#ValidarConsorcios') IS NOT NULL DROP TABLE #ValidarConsorcios;
@@ -74,7 +82,8 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM #ValidarProveedores)
             THROW 50001, 'No se encontr� la hoja [Proveedores$] en el archivo Excel.', 1;
 
-        -- Cargar Consorcios
+        -- CARGA DE CONSORCIOS
+
         IF OBJECT_ID('tempdb..#ConsorciosExcel') IS NOT NULL DROP TABLE #ConsorciosExcel;
         CREATE TABLE #ConsorciosExcel (
             [Consorcio] NVARCHAR(255),
@@ -111,7 +120,13 @@ BEGIN
               AND co.direccion = c.[Domicilio]
         );
 
-        -- Cargar Proveedores y relaciones con Consorcios
+        SET @CountConsorcios = @@ROWCOUNT;
+
+
+  
+        -- CARGA DE PROVEEDORES Y CATEGOR�AS
+
+
         IF OBJECT_ID('tempdb..#ProveedoresExcel') IS NOT NULL DROP TABLE #ProveedoresExcel;
         CREATE TABLE #ProveedoresExcel (
             F1 NVARCHAR(255),
@@ -140,6 +155,9 @@ BEGIN
             SELECT 1 FROM CategoriaGastoOrdinario tg WHERE tg.nombre = P.F1
         );
 
+        SET @CountCategorias = @@ROWCOUNT;
+
+
         -- Insertar proveedores
         IF COL_LENGTH('Proveedores', 'cuenta') IS NOT NULL
         BEGIN
@@ -162,6 +180,9 @@ BEGIN
             );
         END;
 
+        SET @CountProveedores = @@ROWCOUNT;
+
+
         -- Insertar relaci�n Consorcio-Proveedor
         INSERT INTO ConsorcioProveedor (ID_Proveedores, ID_consorcio)
         SELECT
@@ -176,30 +197,36 @@ BEGIN
               AND cp.ID_consorcio = c.ID_consorcio
         );
 
+        SET @CountConsorcioProveedor = @@ROWCOUNT;
+
+
+        -- FINAL TRANSACTION
+ 
         COMMIT TRANSACTION;
-        PRINT 'Registros insertados correctamente.';
+
+
+        PRINT '   REGISTROS INSERTADOS CORRECTAMENTE';
+        PRINT '   Consorcios:             ' + CAST(@CountConsorcios AS NVARCHAR(50));
+        PRINT '   Categor�as:             ' + CAST(@CountCategorias AS NVARCHAR(50));
+        PRINT '   Proveedores:            ' + CAST(@CountProveedores AS NVARCHAR(50));
+        PRINT '   Consorcio-Proveedor:    ' + CAST(@CountConsorcioProveedor AS NVARCHAR(50));
+
 
     END TRY
     BEGIN CATCH
-        IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
 
         DECLARE 
-            @ErrorMessage NVARCHAR(4000),
-            @ErrorSeverity INT,
-            @ErrorState INT;
+            @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE(),
+            @ErrorSeverity INT = ERROR_SEVERITY(),
+            @ErrorState INT = ERROR_STATE();
 
-        SELECT 
-            @ErrorMessage = ERROR_MESSAGE(),
-            @ErrorSeverity = ERROR_SEVERITY(),
-            @ErrorState = ERROR_STATE();
-
-        RAISERROR('Error en SP_Creacion_Consorcio_TipoGastos: %s', @ErrorSeverity, @ErrorState, @ErrorMessage);
+        RAISERROR('Error en SP_Creacion_Consorcio_Proveerdores: %s', 
+                  @ErrorSeverity, @ErrorState, @ErrorMessage);
     END CATCH;
 END;
 GO
 
-
-EXEC dbo.SP_Creacion_Consorcio_Proveerdores
-    @Ruta = N'C:\TEMP\TP_DB',
-    @NombreArchivo = N'datos varios.xlsx';
+--EXEC dbo.SP_Creacion_Consorcio_Proveerdores
+--    @Ruta = N'C:\TEMP\TP_DB',
+--    @NombreArchivo = N'datos varios.xlsx';

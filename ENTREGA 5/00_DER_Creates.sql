@@ -28,7 +28,7 @@ GO
 -- Elimino las tablas si ya existen para que se creen actualizadas, se borran en este orden por tema de dependencias
 PRINT 'Eliminando tablas existentes si las hubiera...';
 BEGIN TRY
-
+    DROP TABLE IF EXISTS MORA;
 	DROP TABLE IF EXISTS Detalles_expensas;
 	DROP TABLE IF EXISTS Expensas;
 	DROP TABLE IF EXISTS Estado_cuenta_prorrateo;
@@ -342,6 +342,8 @@ CREATE TABLE Estado_cuenta_prorrateo (
         ON UPDATE CASCADE
 );
 
+
+
 	PRINT 'Creando tabla Detalles_expensas...';
 
     CREATE TABLE Detalles_expensas (
@@ -393,6 +395,17 @@ CREATE TABLE Pagos_importados (
         REFERENCES CategoriaGastoOrdinario(ID_categoria)
         ON DELETE NO ACTION ON UPDATE CASCADE
 );
+
+	PRINT 'Creando tabla Mora...';
+CREATE TABLE Mora (
+    ID_mora INT IDENTITY PRIMARY KEY,
+    ID_expensas INT NOT NULL,
+    fecha DATE NOT NULL,
+    importe DECIMAL(10,2) NOT NULL,
+    descripcion VARCHAR(200),
+    FOREIGN KEY (ID_expensas) REFERENCES Expensas(ID_expensas)
+);
+
 
 
     PRINT 'Tablas y relaciones creadas correctamente.';

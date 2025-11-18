@@ -37,7 +37,7 @@ BEGIN
             Piso NVARCHAR(10),
             Departamento NVARCHAR(10),
             Coeficiente NVARCHAR(10),
-            m2_UnidadFuncional NVARCHAR(10),
+            m2_Unidad_Funcional NVARCHAR(10),
             Bauleras NVARCHAR(2),
             Cochera NVARCHAR(2),
             m2_Baulera NVARCHAR(10),
@@ -87,7 +87,7 @@ BEGIN
         TRY_CAST(REPLACE(T.Coeficiente, ',', '.') AS DECIMAL(6,4)),
         CASE WHEN UPPER(T.Cochera) = 'SI' THEN 1 ELSE 0 END,
         CASE WHEN UPPER(T.Bauleras) = 'SI' THEN 1 ELSE 0 END,
-        TRY_CAST(REPLACE(T.m2_UnidadFuncional, ',', '.') AS DECIMAL(8,2))
+        TRY_CAST(REPLACE(T.m2_Unidad_funcional, ',', '.') AS DECIMAL(8,2))
     FROM dbo.Tmp_UnidadesFuncionales T
     INNER JOIN Consorcios C ON C.nombre = T.NombreConsorcio
     WHERE NOT EXISTS (
@@ -171,9 +171,7 @@ END;
 GO
 
 
-EXEC dbo.SP_Cargar_UnidadesFuncionales 
-    @Ruta = 'C:\TEMP\TP_DB',
-    @NombreArchivo = 'UF por consorcio.txt';
+
 
 
 

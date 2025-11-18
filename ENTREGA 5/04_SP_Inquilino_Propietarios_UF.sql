@@ -84,17 +84,16 @@ BEGIN
 
         SET @RegistrosInsertados = @@ROWCOUNT;
 
-        PRINT 'Importaci�n y vinculaci�n completadas. Registros insertados: ' + CAST(@RegistrosInsertados AS NVARCHAR(10));
+        PRINT 'Importación y vinculación completadas. Registros insertados: ' + CAST(@RegistrosInsertados AS NVARCHAR(10));
 
         COMMIT TRANSACTION;
     END TRY
 
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        PRINT 'Error durante la importaci�n: ' + ERROR_MESSAGE();
+        PRINT 'Error durante la importación: ' + ERROR_MESSAGE();
     END CATCH
 END;
 GO
 
 
-exec SP_Vincular_Unidades_PropietariosInquilinos @RutaArchivo = 'C:\TEMP\TP_DB\Inquilino-propietarios-UF.csv'
