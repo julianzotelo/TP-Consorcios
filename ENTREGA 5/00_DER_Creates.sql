@@ -363,28 +363,7 @@ CREATE TABLE Estado_cuenta_prorrateo (
              ON UPDATE NO ACTION
     );
 
-	PRINT 'Creando tabla Pagos_importados...';
-
-CREATE TABLE Pagos_importados (
-    ID_pago INT IDENTITY(1,1) PRIMARY KEY,
-    fecha DATE NOT NULL,
-    cuenta_origen CHAR(22) NOT NULL,
-    importe DECIMAL(10,2) NOT NULL,
-    asociado BIT DEFAULT 0,
-    ID_unidad_funcional INT NULL,
-    ID_consorcio INT NULL,
-    ID_tipo_pago INT NOT NULL, -- referencia al catálogo TipoPago
-    CONSTRAINT FK_Pagos_UnidadFuncional FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
-        REFERENCES Unidad_funcional(ID_unidad_funcional, ID_consorcio)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT FK_Pagos_TipoPago FOREIGN KEY (ID_tipo_pago)
-        REFERENCES TipoPago(ID_tipo_pago)
-        ON DELETE NO ACTION
-        ON UPDATE CASCADE
-);
-
-
+	
 	PRINT 'Creando tabla Servicios...';
 
    CREATE TABLE Servicios (
@@ -394,7 +373,7 @@ CREATE TABLE Pagos_importados (
     nombre VARCHAR(50) NOT NULL, -- Luz, Agua, Internet
     empresa VARCHAR(100),
     nro_factura VARCHAR(30),
-    importe DECIMAL(10,2),
+    importe DECIMAL(10,2), 
     fecha DATE,
     CONSTRAINT FK_Servicios_Consorcios FOREIGN KEY (ID_consorcio)
         REFERENCES Consorcios(ID_consorcio)
@@ -420,6 +399,26 @@ CREATE TABLE TipoPago (
     descripcion VARCHAR(200)
 );
 
+PRINT 'Creando tabla Pagos_importados...';
+
+CREATE TABLE Pagos_importados (
+    ID_pago INT IDENTITY(1,1) PRIMARY KEY,
+    fecha DATE NOT NULL,
+    cuenta_origen CHAR(22) NOT NULL,
+    importe DECIMAL(10,2) NOT NULL,
+    asociado BIT DEFAULT 0,
+    ID_unidad_funcional INT NULL,
+    ID_consorcio INT NULL,
+    ID_tipo_pago INT NOT NULL, -- referencia al catálogo TipoPago
+    CONSTRAINT FK_Pagos_UnidadFuncional FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
+        REFERENCES Unidad_funcional(ID_unidad_funcional, ID_consorcio)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT FK_Pagos_TipoPago FOREIGN KEY (ID_tipo_pago)
+        REFERENCES TipoPago(ID_tipo_pago)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE
+);
 
     PRINT 'Tablas y relaciones creadas correctamente.';
 
