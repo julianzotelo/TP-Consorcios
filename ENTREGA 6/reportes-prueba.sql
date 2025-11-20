@@ -131,6 +131,30 @@ ORDER BY mp.deuda_total DESC;
 
 --REPORTE 6--
 
+SELECT
+    PI.ID_unidad_funcional,
+    PI.ID_consorcio,
+    UF.departamento,
+    UF.piso,
+    PI.fecha AS FechaPago,
+    DATEDIFF(
+        DAY,
+        PI.fecha,
+        LEAD(PI.fecha) OVER (PARTITION BY PI.ID_unidad_funcional, PI.ID_consorcio ORDER BY PI.fecha)
+    ) AS DiasEntrePagos
+FROM
+    Pagos_importados PI
+    INNER JOIN TipoPago TP ON PI.ID_tipo_pago = TP.ID_tipo_pago
+    INNER JOIN Unidad_funcional UF ON 
+        PI.ID_unidad_funcional = UF.ID_unidad_funcional AND 
+        PI.ID_consorcio = UF.ID_consorcio
+WHERE
+    TP.nombre = 'ORDINARIO'
+ORDER BY
+    PI.ID_unidad_funcional,
+    PI.ID_consorcio,
+    PI.fecha
+FOR XML PATH('Pago'), ROOT('PagosImportados');
 
 
 
@@ -441,7 +465,6 @@ INSERT INTO Pagos_importados (fecha, cuenta_origen, importe, asociado, ID_unidad
 VALUES
 ('2025-05-05', '0720001790012345678901', 17250, 1, 5, 1, 1),  -- E, mayo
 ('2025-05-19', '0720487788001122334455', 22300, 0, 10, 1, 2); -- E, mayo
-
 
 
 
