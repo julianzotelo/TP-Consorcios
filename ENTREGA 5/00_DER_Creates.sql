@@ -17,7 +17,7 @@ BEGIN
 END
 ELSE
 BEGIN
-    PRINT 'La base Com3641G01 ya existe. Se utilizar� la existente.';
+    PRINT 'La base Com3641G01 ya existe. Se utilizara la existente.';
 END;
 GO
 
@@ -373,9 +373,17 @@ CREATE TABLE Pagos_importados (
     asociado BIT DEFAULT 0,
     ID_unidad_funcional INT NULL,
     ID_consorcio INT NULL,
-    FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
+    ID_tipo_pago INT NOT NULL, -- referencia al catálogo TipoPago
+    CONSTRAINT FK_Pagos_UnidadFuncional FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
         REFERENCES Unidad_funcional(ID_unidad_funcional, ID_consorcio)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT FK_Pagos_TipoPago FOREIGN KEY (ID_tipo_pago)
+        REFERENCES TipoPago(ID_tipo_pago)
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE
 );
+
 
 	PRINT 'Creando tabla Servicios...';
 
@@ -406,6 +414,11 @@ CREATE TABLE Mora (
     FOREIGN KEY (ID_expensas) REFERENCES Expensas(ID_expensas)
 );
 
+CREATE TABLE TipoPago (
+    ID_tipo_pago INT IDENTITY(1,1) PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL CHECK (nombre IN ('ORDINARIO','EXTRAORDINARIO')),
+    descripcion VARCHAR(200)
+);
 
 
     PRINT 'Tablas y relaciones creadas correctamente.';
