@@ -129,6 +129,9 @@ INNER JOIN PropietarioInquilino pi
     ON mp.ID_PropietarioInquilino = pi.ID_PropietarioInquilino
 ORDER BY mp.deuda_total DESC;
 
+
+
+
 --REPORTE 6--
 
 SELECT
@@ -467,6 +470,56 @@ VALUES
 ('2025-05-19', '0720487788001122334455', 22300, 0, 10, 1, 2); -- E, mayo
 
 
+---INSERT INTO PARA EL REPORTE 5--
+
+INSERT INTO Expensas (ID_unidad_funcional, ID_consorcio, periodo, monto_total, estado, fecha_vencimiento)
+VALUES
+(1, 1, '2024-01', 25000, 'IMPAGA', '2024-02-10'),
+(1, 1, '2024-02', 26000, 'IMPAGA', '2024-03-10'),
+(2, 1, '2024-01', 28000, 'IMPAGA', '2024-02-10'),
+(3, 1, '2024-01', 22000, 'IMPAGA', '2024-02-10'),
+(4, 1, '2024-01', 30000, 'IMPAGA', '2024-02-10'),
+(5, 1, '2024-01', 18000, 'IMPAGA', '2024-02-10'),
+(6, 2, '2024-01', 25000, 'IMPAGA', '2024-02-10'),
+(7, 2, '2024-01', 31000, 'IMPAGA', '2024-02-10'),
+(8, 2, '2024-01', 20000, 'IMPAGA', '2024-02-10'),
+(9, 2, '2024-01', 30000, 'IMPAGA', '2024-02-10');
+
+INSERT INTO Estado_cuenta_prorrateo
+(ID_unidad_funcional, ID_consorcio, periodo, saldo_anterior, pagos_recibidos, interes_mora, expensas_ordinarias, expensas_extraordinarias, total_pagar)
+VALUES
+(1, 1, '2024-01', 0, 0, 500, 25000, 0, 25500),
+(1, 1, '2024-02', 25500, 0, 600, 26000, 0, 52100),
+
+(2, 1, '2024-01', 0, 0, 800, 28000, 0, 28800),
+
+(3, 1, '2024-01', 0, 0, 300, 22000, 0, 22300),
+
+(4, 1, '2024-01', 0, 0, 700, 30000, 0, 30700),
+
+(5, 1, '2024-01', 0, 0, 200, 18000, 0, 18200),
+
+(6, 2, '2024-01', 0, 0, 500, 25000, 0, 25500),
+
+(7, 2, '2024-01', 0, 0, 900, 31000, 0, 31900),
+
+(8, 2, '2024-01', 0, 0, 300, 20000, 0, 20300),
+
+(9, 2, '2024-01', 0, 0, 700, 30000, 0, 30700);
+
+
+INSERT INTO Mora (ID_expensas, fecha, importe, descripcion)
+VALUES
+(1, '2024-03-01', 500, 'Pago fuera de término'),
+(2, '2024-04-01', 600, 'Intereses acumulados'),
+(3, '2024-03-05', 800, 'Pago tardío'),
+(4, '2024-03-10', 300, 'Pago tardío'),
+(5, '2024-03-08', 700, 'Pago fuera de término'),
+(6, '2024-03-15', 200, 'Pago fuera de término'),
+(7, '2024-03-20', 500, 'Recargo'),
+(8, '2024-03-22', 900, 'Recargo'),
+(9, '2024-03-25', 300, 'Recargo'),
+(10,'2024-03-28', 700, 'Recargo');
 
 
 
