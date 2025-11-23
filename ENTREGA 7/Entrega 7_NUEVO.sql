@@ -1,9 +1,7 @@
-
--- 0) Contexto
 USE Com3641G01;
 GO
 
--- 1) Master Key
+-- 1) Crear Master Key
 CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'Com3641G01';
 GO
 
@@ -27,10 +25,7 @@ WITH PRIVATE KEY (
 );
 GO
 
---------------------------------------
-
-USE Com3641G01
-GO
+--------------- Encriptar tablas con datos sensibles -----------------------
 
 -- Abrir clave para la migración
 OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
@@ -93,7 +88,11 @@ GO
 -- Cerrar clave
 CLOSE SYMMETRIC KEY SK_Consorcio;
 GO
-------------------------------------------------------------------
+
+
+
+--------------------- Creacion y ejecucion de SP para limpiar y renombrar las columnas luego de encriptacion ---------------------------------------------
+
 
 CREATE OR ALTER PROCEDURE dbo.SP_PropietarioInquilino_CleanupAndRename
 AS
@@ -147,26 +146,9 @@ BEGIN
 
     IF COL_LENGTH('dbo.PropietarioInquilino', 'CVU_CBU_c') IS NOT NULL
         EXEC sp_rename 'dbo.PropietarioInquilino.CVU_CBU_c', 'CVU_CBU', 'COLUMN';
+
 END;
 GO
-
-EXEC dbo.SP_PropietarioInquilino_CleanupAndRename
-
-------------------------------------------------------------------
-
-SELECT*
-FROM dbo.PropietarioInquilino
-
-
-------------------------------------------------------------------
-
-SELECT *
-FROM 
-
-
-
-------------------------------------------------------------------
-
 
 CREATE OR ALTER PROCEDURE dbo.SP_Proveedores_CleanupAndRename
 AS
@@ -191,12 +173,9 @@ BEGIN
     -- 3. Renombrar columna cifrada
     IF COL_LENGTH('dbo.Proveedores', 'cuenta_c') IS NOT NULL
         EXEC sp_rename 'dbo.Proveedores.cuenta_c', 'cuenta', 'COLUMN';
+
 END;
 GO
-
-EXEC dbo.SP_Proveedores_CleanupAndRename
-
--------------------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE dbo.SP_Consorcios_CleanupAndRename
 AS
@@ -224,10 +203,6 @@ BEGIN
 END;
 GO
 
-EXEC dbo.SP_Consorcios_CleanupAndRename
-
----------------------------------------------
-
 CREATE OR ALTER PROCEDURE dbo.SP_PagosImportados_CleanupAndRename
 AS
 BEGIN
@@ -254,6 +229,95 @@ BEGIN
 END;
 GO
 
+EXEC dbo.SP_PropietarioInquilino_CleanupAndRename
+EXEC dbo.SP_Proveedores_CleanupAndRename
+EXEC dbo.SP_Consorcios_CleanupAndRename
 EXEC dbo.SP_PagosImportados_CleanupAndRename
 
------------------------------------------------------------
+
+-------------------- Triggers para encriptacion al insertar datos en tablas sensibles -----------------------------------------------------------------
+
+CREATE OR ALTER TRIGGER TRG_PagosImportados_Encrypt
+ON dbo.Pagos_importados
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+    UPDATE P
+    SET cuenta_origen = EncryptByKey(Key_GUID('SK_Consorcio'), i.cuenta_origen)
+    FROM dbo.Pagos_importados P
+    INNER JOIN inserted i ON P.ID_pago = i.ID_pago;
+
+    CLOSE SYMMETRIC KEY SK_Consorcio;
+END;
+GO
+
+CREATE OR ALTER TRIGGER TRG_PropietarioInquilino_Encrypt
+ON dbo.PropietarioInquilino
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+    UPDATE P
+    SET DNI      = EncryptByKey(Key_GUID('SK_Consorcio'), CAST(i.DNI AS VARCHAR(20))),
+        nombre   = EncryptByKey(Key_GUID('SK_Consorcio'), i.nombre),
+        apellido = EncryptByKey(Key_GUID('SK_Consorcio'), i.apellido),
+        email    = EncryptByKey(Key_GUID('SK_Consorcio'), i.email),
+        telefono = EncryptByKey(Key_GUID('SK_Consorcio'), i.telefono),
+        CVU_CBU  = EncryptByKey(Key_GUID('SK_Consorcio'), i.CVU_CBU)
+    FROM dbo.PropietarioInquilino P
+    INNER JOIN inserted i ON P.ID_PropietarioInquilino = i.ID_PropietarioInquilino;
+
+    CLOSE SYMMETRIC KEY SK_Consorcio;
+END;
+GO
+
+CREATE OR ALTER TRIGGER TRG_Consorcios_Encrypt
+ON dbo.Consorcios
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+    UPDATE C
+    SET CBU_CVU = EncryptByKey(Key_GUID('SK_Consorcio'), i.CBU_CVU)
+    FROM dbo.Consorcios C
+    INNER JOIN inserted i ON C.ID_consorcio = i.ID_consorcio;
+
+    CLOSE SYMMETRIC KEY SK_Consorcio;
+END;
+GO
+
+CREATE OR ALTER TRIGGER TRG_Proveedores_Encrypt
+ON dbo.Proveedores
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+    UPDATE P
+    SET cuenta = EncryptByKey(Key_GUID('SK_Consorcio'), i.cuenta)
+    FROM dbo.Proveedores P
+    INNER JOIN inserted i ON P.ID_Proveedores = i.ID_Proveedores;
+
+    CLOSE SYMMETRIC KEY SK_Consorcio;
+END;
+GO
+
+
+INSERT INTO dbo.PropietarioInquilino (DNI, nombre, apellido, email, telefono, CVU_CBU, inquilino)
+VALUES ('30111222', 'Juan', 'Pérez', 'juan.perez@mail.com', '1144556677', '1234567890123456789012', 0);
+
+select *
+from PropietarioInquilino
+
