@@ -81,3 +81,34 @@ ELSE
 
 
 SELECT * FROM feriados
+
+
+--------------------- Ejemplo de USO ----------------------------
+SELECT TOP 5 
+    FORMAT(g.fecha, 'yyyy-MM') AS periodo,
+    SUM(g.monto_total) AS total_gastos_ARS,
+    SUM(g.monto_total) / c.DolarARS AS total_gastos_USD
+FROM Gastos g
+CROSS JOIN (
+    SELECT TOP 1 DolarARS
+    FROM Cotizaciones
+    ORDER BY Fecha DESC
+) c
+GROUP BY FORMAT(g.fecha, 'yyyy-MM'), c.DolarARS
+ORDER BY total_gastos_USD DESC;
+
+
+SELECT TOP 5 
+    FORMAT(p.fecha, 'yyyy-MM') AS periodo,
+    SUM(p.importe) AS total_ingresos_ARS,
+    SUM(p.importe) / c.DolarARS AS total_ingresos_USD
+FROM Pagos_importados p
+CROSS JOIN (
+    SELECT TOP 1 DolarARS
+    FROM Cotizaciones
+    ORDER BY Fecha DESC
+) c
+GROUP BY FORMAT(p.fecha, 'yyyy-MM'), c.DolarARS
+ORDER BY total_ingresos_USD DESC;
+
+
