@@ -321,3 +321,131 @@ VALUES ('30111222', 'Juan', 'Pérez', 'juan.perez@mail.com', '1144556677', '12345
 select *
 from PropietarioInquilino
 
+
+------------------------------------
+
+CREATE OR ALTER PROCEDURE dbo.SP_InsertarPropietarioInquilino
+    @DNI VARCHAR(20),
+    @nombre VARCHAR(50),
+    @apellido VARCHAR(50),
+    @email VARCHAR(100),
+    @telefono VARCHAR(30),
+    @CVU_CBU CHAR(22),
+    @inquilino BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+    INSERT INTO dbo.PropietarioInquilino (DNI, nombre, apellido, email, telefono, CVU_CBU, inquilino)
+    VALUES (
+        EncryptByKey(Key_GUID('SK_Consorcio'), @DNI),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @nombre),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @apellido),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @email),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @telefono),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @CVU_CBU),
+        @inquilino
+    );
+
+    CLOSE SYMMETRIC KEY SK_Consorcio;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.SP_ActualizarPropietarioInquilino
+    @ID_PropietarioInquilino INT,
+    @DNI VARCHAR(20) = NULL,
+    @nombre VARCHAR(50) = NULL,
+    @apellido VARCHAR(50) = NULL,
+    @email VARCHAR(100) = NULL,
+    @telefono VARCHAR(30) = NULL,
+    @CVU_CBU CHAR(22) = NULL,
+    @inquilino BIT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+    UPDATE dbo.PropietarioInquilino
+    SET DNI      = COALESCE(EncryptByKey(Key_GUID('SK_Consorcio'), @DNI), DNI),
+        nombre   = COALESCE(EncryptByKey(Key_GUID('SK_Consorcio'), @nombre), nombre),
+        apellido = COALESCE(EncryptByKey(Key_GUID('SK_Consorcio'), @apellido), apellido),
+        email    = COALESCE(EncryptByKey(Key_GUID('SK_Consorcio'), @email), email),
+        telefono = COALESCE(EncryptByKey(Key_GUID('SK_Consorcio'), @telefono), telefono),
+        CVU_CBU  = COALESCE(EncryptByKey(Key_GUID('SK_Consorcio'), @CVU_CBU), CVU_CBU),
+        inquilino= COALESCE(@inquilino, inquilino)
+    WHERE ID_PropietarioInquilino = @ID_PropietarioInquilino;
+
+    CLOSE SYMMETRIC KEY SK_Consorcio;
+END;
+GO
+
+------------
+-- Abrir la clave simétrica
+OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+-------------------------
+
+EXEC dbo.SP_InsertarPropietarioInquilino
+    @DNI = '30111222',
+    @nombre = 'Juan',
+    @apellido = 'Pérez',
+    @email = 'juan.perez@mail.com',
+    @telefono = '1144556677',
+    @CVU_CBU = '1234567890123456789012',
+    @inquilino = 0;
+
+-------------------------
+
+-- Cerrar la clave
+CLOSE SYMMETRIC KEY SK_Consorcio;
+
+SELECT * 
+FROM sys.openkeys;
+
+----------------------------------
+
+CREATE OR ALTER PROCEDURE dbo.SP_InsertarPropietarioInquilino
+    @DNI VARCHAR(20),
+    @nombre VARCHAR(50),
+    @apellido VARCHAR(50),
+    @email VARCHAR(100),
+    @telefono VARCHAR(30),
+    @CVU_CBU CHAR(22),
+    @inquilino BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- La clave ya debe estar abierta en la sesión ANTES de llamar al SP
+    INSERT INTO dbo.PropietarioInquilino (DNI, nombre, apellido, email, telefono, CVU_CBU, inquilino)
+    VALUES (
+        EncryptByKey(Key_GUID('SK_Consorcio'), @DNI),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @nombre),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @apellido),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @email),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @telefono),
+        EncryptByKey(Key_GUID('SK_Consorcio'), @CVU_CBU),
+        @inquilino
+    );
+END;
+GO
+
+-----------------------------------
+
+-- 1. Abrir la clave en la sesión
+OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
+
+-- 2. Ejecutar el SP con parámetros en texto claro
+EXEC dbo.SP_InsertarPropietarioInquilino
+    @DNI = '30111222',
+    @nombre = 'Juan',
+    @apellido = 'Pérez',
+    @email = 'juan.perez@mail.com',
+    @telefono = '1144556677',
+    @CVU_CBU = '1234567890123456789012',
+    @inquilino = 0;
+
+-- 3. Cerrar la clave
+CLOSE SYMMETRIC KEY SK_Consorcio;
+
