@@ -427,4 +427,4 @@ BEGIN CATCH
     PRINT 'Error durante la creaci�n de tablas:';
     PRINT ERROR_MESSAGE();
 END CATCH;
-GO
+GO9-kj6uh5 rbtgedfvwsxac 7

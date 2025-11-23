@@ -171,7 +171,7 @@ END;
 GO
 
 
-
+EXEC dbo.SP_Cargar_UnidadesFuncionales @Ruta = 'C:\TEMP\TP_DB',@NombreArchivo = 'UF por consorcio.txt';
 
 
 

@@ -227,6 +227,30 @@ BEGIN
 END;
 GO
 
---EXEC dbo.SP_Creacion_Consorcio_Proveerdores
---    @Ruta = N'C:\TEMP\TP_DB',
---    @NombreArchivo = N'datos varios.xlsx';
+EXEC dbo.SP_Creacion_Consorcio_Proveerdores @Ruta = N'C:\TEMP\TP_DB', @NombreArchivo = N'datos varios.xlsx';
+
+
+sp_configure 'show advanced options', 1;
+RECONFIGURE;
+sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE;
+EXEC sp_configure 'Ad Hoc Distributed Queries';
+
+
+SELECT * 
+FROM OPENROWSET(
+    'Microsoft.ACE.OLEDB.12.0',
+    'Excel 12.0 Xml;HDR=YES;Database=C:\TEMP\TP_DB\datos varios.xlsx',
+    'SELECT * FROM [Consorcios$]'
+);
+
+EXEC sp_configure 'Ad Hoc Distributed Queries';
+
+SELECT * 
+FROM OPENROWSET(
+    'Microsoft.ACE.OLEDB.12.0',
+    'Excel 12.0 Xml;HDR=YES;Database=C:\temp\TP_DB\datos varios.xlsx',
+    'SELECT * FROM [Consorcios$]'
+);
+
+

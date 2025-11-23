@@ -167,8 +167,6 @@ FOR XML PATH('Pago'), ROOT('PagosImportados');
 
 
 
-
-
 --DATOS--
 IF NOT EXISTS (SELECT 1 FROM TipoPago WHERE nombre = 'ORDINARIO')
 INSERT INTO TipoPago (nombre, descripcion)
