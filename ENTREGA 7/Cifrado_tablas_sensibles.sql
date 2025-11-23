@@ -25,7 +25,7 @@ WITH PRIVATE KEY (
 );
 GO
 
---------------- Encriptar tablas con datos sensibles -----------------------
+----------------------- Encriptar tablas con datos sensibles ------------------------------------
 
 -- Abrir clave para la migración
 OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
@@ -380,30 +380,9 @@ BEGIN
 END;
 GO
 
-------------
--- Abrir la clave simétrica
-OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
 
--------------------------
 
-EXEC dbo.SP_InsertarPropietarioInquilino
-    @DNI = '30111222',
-    @nombre = 'Juan',
-    @apellido = 'Pérez',
-    @email = 'juan.perez@mail.com',
-    @telefono = '1144556677',
-    @CVU_CBU = '1234567890123456789012',
-    @inquilino = 0;
-
--------------------------
-
--- Cerrar la clave
-CLOSE SYMMETRIC KEY SK_Consorcio;
-
-SELECT * 
-FROM sys.openkeys;
-
-----------------------------------
+------------------------------  SP para insertar datos ya cifrados  ---------------------------------------
 
 CREATE OR ALTER PROCEDURE dbo.SP_InsertarPropietarioInquilino
     @DNI VARCHAR(20),
@@ -431,7 +410,71 @@ BEGIN
 END;
 GO
 
------------------------------------
+CREATE OR ALTER PROCEDURE dbo.SP_InsertarConsorcio
+    @consorcio VARCHAR(100),
+    @nombre VARCHAR(100),
+    @direccion VARCHAR(150),
+    @m2_totales DECIMAL(10,2),
+    @cant_unidades INT,
+    @CBU_CVU CHAR(22)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.Consorcios (consorcio, nombre, direccion, m2_totales, cant_unidades, CBU_CVU)
+    VALUES (
+        @consorcio,
+        @nombre,
+        @direccion,
+        @m2_totales,
+        @cant_unidades,
+        EncryptByKey(Key_GUID('SK_Consorcio'), @CBU_CVU)
+    );
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.SP_InsertarProveedor
+    @nombre VARCHAR(100),
+    @cuenta VARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.Proveedores (nombre, cuenta)
+    VALUES (
+        @nombre,
+        EncryptByKey(Key_GUID('SK_Consorcio'), @cuenta)
+    );
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.SP_InsertarPagoImportado
+    @fecha DATE,
+    @cuenta_origen CHAR(22),
+    @importe DECIMAL(10,2),
+    @asociado BIT = 0,
+    @ID_unidad_funcional INT = NULL,
+    @ID_consorcio INT = NULL,
+    @ID_tipo_pago INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.Pagos_importados (fecha, cuenta_origen, importe, asociado, ID_unidad_funcional, ID_consorcio, ID_tipo_pago)
+    VALUES (
+        @fecha,
+        EncryptByKey(Key_GUID('SK_Consorcio'), @cuenta_origen),
+        @importe,
+        @asociado,
+        @ID_unidad_funcional,
+        @ID_consorcio,
+        @ID_tipo_pago
+    );
+END;
+GO
+
+
+------------------------------  EJEMPLO USO SP INSERCION  ---------------------------------------
 
 -- 1. Abrir la clave en la sesión
 OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
