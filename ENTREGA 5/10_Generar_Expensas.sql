@@ -1,4 +1,4 @@
-/*  Generacion de expensas
+/*  Generacion de expensas completa
 13-11-2025
 Comisi�n 3641 
 Grupo 01 
@@ -16,7 +16,7 @@ GO
 CREATE OR ALTER PROCEDURE SP_Generar_Expensas_Completo
 (
     @ID_consorcio INT,
-    @periodo CHAR(20)  -- formato : 'marzo-2025' (mesNombre-anio)
+    @periodo CHAR(20)  -- formato esperado: 'marzo-2025' (mesNombre-anio)
 )
 AS
 BEGIN
@@ -494,9 +494,9 @@ BEGIN
             ),
             (
                 @ID_estado_financiero,
-                (SELECT ID_tipo_detalle FROM TipoDetalleFinanciero WHERE nombre = 'Expensas en t�rmino'),
+                (SELECT ID_tipo_detalle FROM TipoDetalleFinanciero WHERE nombre = 'Expensas en término'),
                 @IngresosEnTermino,
-                'Ingresos por pago en t�rmino'
+                'Ingresos por pago en término'
             ),
             (
                 @ID_estado_financiero,
@@ -632,7 +632,13 @@ BEGIN
             ('ESTADO_FINANCIERO','SaldoCierre', CAST(@SaldoCierre AS NVARCHAR(100)), 6),
             ('ESTADO_FINANCIERO','Periodo', @periodo, 6);
 
+        ----------------------------------------------------------------
+        -- Aqu� podr�as agregar m�s inserts a #ResultadoFinal para otras secciones
+        -- (por ejemplo: Detalle_expensas, EstadoUF, DetalleGastosPeriodo, etc.)
+        -- si quer�s que incluya todo detalle, te lo agrego.
+        ----------------------------------------------------------------
 
+        -- Al final devolvemos SOLO la tabla unificada (�nico result set)
         SELECT Seccion, Clave, Valor, Orden
         FROM #ResultadoFinal
         ORDER BY Orden, Seccion, Clave;

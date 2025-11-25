@@ -113,3 +113,6 @@ BEGIN
 END;
 GO
 
+EXEC dbo.SP_Cargar_Pagos_Importados 
+    @Ruta = 'C:\TEMP\TP_DB',
+    @NombreArchivo = 'pagos_consorcios.csv';

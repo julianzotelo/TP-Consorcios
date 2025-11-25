@@ -10,13 +10,13 @@ CREATE CERTIFICATE Cert_Consorcio
 WITH SUBJECT = 'Cifrado de columnas sensibles consorcios';
 GO
 
--- 3) Clave simétrica AES-256
+-- 3) Clave simï¿½trica AES-256
 CREATE SYMMETRIC KEY SK_Consorcio
 WITH ALGORITHM = AES_256
 ENCRYPTION BY CERTIFICATE Cert_Consorcio;
 GO
 
--- 4) Backups de claves (guardar en un almacén seguro)
+-- 4) Backups de claves (guardar en un almacï¿½n seguro)
 BACKUP CERTIFICATE Cert_Consorcio
 TO FILE = 'C:\TEMP\Cert_Consorcio.cer'
 WITH PRIVATE KEY (
@@ -27,7 +27,7 @@ GO
 
 ----------------------- Encriptar tablas con datos sensibles ------------------------------------
 
--- Abrir clave para la migración
+-- Abrir clave para la migraciï¿½n
 OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
 GO
 
@@ -316,7 +316,7 @@ GO
 
 
 INSERT INTO dbo.PropietarioInquilino (DNI, nombre, apellido, email, telefono, CVU_CBU, inquilino)
-VALUES ('30111222', 'Juan', 'Pérez', 'juan.perez@mail.com', '1144556677', '1234567890123456789012', 0);
+VALUES ('30111222', 'Juan', 'Pï¿½rez', 'juan.perez@mail.com', '1144556677', '1234567890123456789012', 0);
 
 select *
 from PropietarioInquilino
@@ -396,7 +396,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- La clave ya debe estar abierta en la sesión ANTES de llamar al SP
+    -- La clave ya debe estar abierta en la sesiï¿½n ANTES de llamar al SP
     INSERT INTO dbo.PropietarioInquilino (DNI, nombre, apellido, email, telefono, CVU_CBU, inquilino)
     VALUES (
         EncryptByKey(Key_GUID('SK_Consorcio'), @DNI),
@@ -455,12 +455,11 @@ CREATE OR ALTER PROCEDURE dbo.SP_InsertarPagoImportado
     @asociado BIT = 0,
     @ID_unidad_funcional INT = NULL,
     @ID_consorcio INT = NULL,
-    @ID_tipo_pago INT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.Pagos_importados (fecha, cuenta_origen, importe, asociado, ID_unidad_funcional, ID_consorcio, ID_tipo_pago)
+    INSERT INTO dbo.Pagos_importados (fecha, cuenta_origen, importe, asociado, ID_unidad_funcional, ID_consorcio)
     VALUES (
         @fecha,
         EncryptByKey(Key_GUID('SK_Consorcio'), @cuenta_origen),
@@ -468,7 +467,6 @@ BEGIN
         @asociado,
         @ID_unidad_funcional,
         @ID_consorcio,
-        @ID_tipo_pago
     );
 END;
 GO
@@ -476,14 +474,14 @@ GO
 
 ------------------------------  EJEMPLO USO SP INSERCION  ---------------------------------------
 
--- 1. Abrir la clave en la sesión
+-- 1. Abrir la clave en la sesiï¿½n
 OPEN SYMMETRIC KEY SK_Consorcio DECRYPTION BY CERTIFICATE Cert_Consorcio;
 
--- 2. Ejecutar el SP con parámetros en texto claro
+-- 2. Ejecutar el SP con parï¿½metros en texto claro
 EXEC dbo.SP_InsertarPropietarioInquilino
     @DNI = '30111222',
     @nombre = 'Juan',
-    @apellido = 'Pérez',
+    @apellido = 'Pï¿½rez',
     @email = 'juan.perez@mail.com',
     @telefono = '1144556677',
     @CVU_CBU = '1234567890123456789012',

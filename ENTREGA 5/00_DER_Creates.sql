@@ -1,6 +1,6 @@
-/*  Create DB y tablas
+/*  Importar archivo xlsx
 13-11-2025
-Comisión 3641 
+Comisi�n 3641 
 Grupo 01 
 Bases de datos aplicada
 Alumno                      | DNI
@@ -10,6 +10,11 @@ Zotelo, Julian Lorenzo      | 42536473
 
 */
 
+/*Cada grupo deber� generar una DB con un nombre distinto. Para ello usar�n el nombre de la
+comisi�n y del grupo como denominador de la DB. Por ejemplo �Com3900G02�. El formato
+es ComXXXXGYY donde XXXX es el c�digo de comisi�n e YY es el n�mero de grupo con
+cero a la izquierda de ser necesario.
+*/
 IF DB_ID('Com3641G01') IS NULL
 BEGIN
     PRINT 'Creando base de datos Com3641G01...';
@@ -28,6 +33,7 @@ GO
 -- Elimino las tablas si ya existen para que se creen actualizadas, se borran en este orden por tema de dependencias
 PRINT 'Eliminando tablas existentes si las hubiera...';
 BEGIN TRY
+
     DROP TABLE IF EXISTS MORA;
 	DROP TABLE IF EXISTS Detalles_expensas;
 	DROP TABLE IF EXISTS Expensas;
@@ -39,7 +45,6 @@ BEGIN TRY
     DROP TABLE IF EXISTS Pagos_importados;
 	DROP TABLE IF EXISTS Unidad_funcional;
 	DROP TABLE IF EXISTS PropietarioInquilino;
-	DROP TABLE IF EXISTS Factura;
 	DROP TABLE IF EXISTS Detalle_Gasto;
 	DROP TABLE IF EXISTS Gastos;
 	DROP TABLE IF EXISTS CategoriaGastoOrdinario;
@@ -50,8 +55,8 @@ BEGIN TRY
 	DROP TABLE IF EXISTS Proveedores;
 	DROP TABLE IF EXISTS TipoDetalleFinanciero;
     DROP TABLE IF EXISTS Consorcios;
-    
-
+    DROP TABLE IF EXISTS Export_Expensas;
+    DROP TABLE IF EXISTS Export_EstadoCuentaProrrateo;
 
     PRINT 'Tablas previas eliminadas correctamente.';
 
@@ -109,8 +114,7 @@ BEGIN TRY
 		ID_tipo_detalle INT IDENTITY(1,1) PRIMARY KEY,
 		tipo_movimiento VARCHAR(10) NOT NULL CHECK (tipo_movimiento IN ('INGRESO','EGRESO')),
 		nombre VARCHAR(50) NOT NULL,     
-		descripcion VARCHAR(200),
-		monto DECIMAL(10,2)
+		descripcion VARCHAR(200)
 	);
 
 
@@ -119,7 +123,7 @@ BEGIN TRY
     CREATE TABLE Estado_financiero (
         ID_estado_financiero INT IDENTITY(1,1) PRIMARY KEY,
         ID_consorcio INT NOT NULL,
-        periodo CHAR(7),
+        periodo varCHAR(70),
         saldo_anterior DECIMAL(10,2),
 		saldo_cierre DECIMAL(10,2),
         CONSTRAINT FK_EstadoFinanciero_Consorcios FOREIGN KEY (ID_consorcio)
@@ -204,26 +208,7 @@ BEGIN TRY
 			ON UPDATE CASCADE
 	);
 
-	PRINT 'Creando tabla Factura...';
-
-	CREATE TABLE Factura (
-		ID_factura INT IDENTITY(1,1) PRIMARY KEY,
-		ID_detalle_gasto INT NOT NULL,
-		ID_Proveedores INT NOT NULL,
-		fecha_emision DATE NOT NULL,
-		fecha_vencimiento DATE,
-		monto_total DECIMAL(10,2),
-		estado VARCHAR(20),
-		CONSTRAINT FK_Factura_DetalleGasto FOREIGN KEY (ID_detalle_gasto)
-			REFERENCES Detalle_Gasto(ID_detalle_gasto)
-			ON DELETE CASCADE
-			ON UPDATE CASCADE,
-		CONSTRAINT FK_Factura_Proveedores FOREIGN KEY (ID_Proveedores)
-			REFERENCES Proveedores(ID_Proveedores)
-			ON DELETE NO ACTION
-			ON UPDATE CASCADE
-	);
-
+	
 
 CREATE TABLE PropietarioInquilino (
     ID_PropietarioInquilino INT IDENTITY(1,1) PRIMARY KEY,
@@ -264,8 +249,6 @@ CREATE TABLE Unidad_funcional (
     ID_consorcio INT NOT NULL,
     ID_PropietarioInquilino INT NOT NULL,
     rol VARCHAR(20) CHECK (rol IN ('PROPIETARIO', 'INQUILINO')),
-    fecha_desde DATE,
-    fecha_hasta DATE,
     PRIMARY KEY (ID_unidad_funcional, ID_consorcio, ID_PropietarioInquilino, rol),
     FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
         REFERENCES Unidad_funcional(ID_unidad_funcional, ID_consorcio),
@@ -310,7 +293,7 @@ CREATE TABLE Baulera (
     ID_expensas INT IDENTITY(1,1) PRIMARY KEY,
     ID_unidad_funcional INT NOT NULL,
     ID_consorcio INT NOT NULL,
-    periodo CHAR(7),
+    periodo CHAR(70),
     monto_total DECIMAL(10,2),
     estado VARCHAR(20),
     fecha_vencimiento DATE,
@@ -328,7 +311,7 @@ CREATE TABLE Estado_cuenta_prorrateo (
     ID_estado_de_cuenta INT IDENTITY(1,1) PRIMARY KEY,
     ID_unidad_funcional INT NOT NULL,
     ID_consorcio INT NOT NULL,
-    periodo CHAR(7),
+    periodo CHAR(70),
     saldo_anterior DECIMAL(10,2),
     pagos_recibidos DECIMAL(10,2),
     interes_mora DECIMAL(10,2),
@@ -363,7 +346,20 @@ CREATE TABLE Estado_cuenta_prorrateo (
              ON UPDATE NO ACTION
     );
 
-	
+	PRINT 'Creando tabla Pagos_importados...';
+
+CREATE TABLE Pagos_importados (
+    ID_pago INT IDENTITY(1,1) PRIMARY KEY,
+    fecha DATE NOT NULL,
+    cuenta_origen CHAR(22) NOT NULL,
+    importe DECIMAL(10,2) NOT NULL,
+    asociado BIT DEFAULT 0,
+    ID_unidad_funcional INT NULL,
+    ID_consorcio INT NULL,
+    FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
+        REFERENCES Unidad_funcional(ID_unidad_funcional, ID_consorcio)
+);
+
 	PRINT 'Creando tabla Servicios...';
 
    CREATE TABLE Servicios (
@@ -373,7 +369,7 @@ CREATE TABLE Estado_cuenta_prorrateo (
     nombre VARCHAR(50) NOT NULL, -- Luz, Agua, Internet
     empresa VARCHAR(100),
     nro_factura VARCHAR(30),
-    importe DECIMAL(10,2), 
+    importe DECIMAL(10,2),
     fecha DATE,
     CONSTRAINT FK_Servicios_Consorcios FOREIGN KEY (ID_consorcio)
         REFERENCES Consorcios(ID_consorcio)
@@ -393,32 +389,32 @@ CREATE TABLE Mora (
     FOREIGN KEY (ID_expensas) REFERENCES Expensas(ID_expensas)
 );
 
-CREATE TABLE TipoPago (
-    ID_tipo_pago INT IDENTITY(1,1) PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL CHECK (nombre IN ('ORDINARIO','EXTRAORDINARIO')),
-    descripcion VARCHAR(200)
-);
+    PRINT 'Tablas solo para el uso de los csv'
+    CREATE TABLE Export_Expensas
+    (
+       Seccion VARCHAR(100),
+            Clave VARCHAR(200),
+            Valor NVARCHAR(1000),
+            Orden INT
+    );
 
-PRINT 'Creando tabla Pagos_importados...';
+    CREATE TABLE Export_EstadoCuentaProrrateo
+    (
+        UF VARCHAR(50),
+        Porcentaje DECIMAL(10,2),
+        [Piso-Depto] VARCHAR(50),
+        Cocheras VARCHAR(50),
+        Bauleras VARCHAR(50),
+        Propietario VARCHAR(200),
+        [Saldo anterior abonado] DECIMAL(18,2),
+        [Pagos recibidos] DECIMAL(18,2),
+        Deuda DECIMAL(18,2),
+        [Inter�s por mora] DECIMAL(18,2),
+        [Expensas ordinarias] DECIMAL(18,2),
+        [Expensas extraordinarias] DECIMAL(18,2),
+        [Total a Pagar] DECIMAL(18,2)
+    );
 
-CREATE TABLE Pagos_importados (
-    ID_pago INT IDENTITY(1,1) PRIMARY KEY,
-    fecha DATE NOT NULL,
-    cuenta_origen CHAR(22) NOT NULL,
-    importe DECIMAL(10,2) NOT NULL,
-    asociado BIT DEFAULT 0,
-    ID_unidad_funcional INT NULL,
-    ID_consorcio INT NULL,
-    ID_tipo_pago INT NOT NULL, -- referencia al catálogo TipoPago
-    CONSTRAINT FK_Pagos_UnidadFuncional FOREIGN KEY (ID_unidad_funcional, ID_consorcio)
-        REFERENCES Unidad_funcional(ID_unidad_funcional, ID_consorcio)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    CONSTRAINT FK_Pagos_TipoPago FOREIGN KEY (ID_tipo_pago)
-        REFERENCES TipoPago(ID_tipo_pago)
-        ON DELETE NO ACTION
-        ON UPDATE CASCADE
-);
 
     PRINT 'Tablas y relaciones creadas correctamente.';
 
@@ -427,4 +423,4 @@ BEGIN CATCH
     PRINT 'Error durante la creaci�n de tablas:';
     PRINT ERROR_MESSAGE();
 END CATCH;
-GO9-kj6uh5 rbtgedfvwsxac 7
+GO

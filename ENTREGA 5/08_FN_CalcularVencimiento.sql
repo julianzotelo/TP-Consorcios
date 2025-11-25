@@ -1,11 +1,11 @@
 /*  Funcion que calcula el quinto dia habil (vencimiento)
 13-11-2025
-Comisiï¿½n 3641 
+Comisión 3641 
 Grupo 01 
 Bases de datos aplicada
 Alumno                      | DNI
 Pereyra, Facundo Gabriel    | 43105379
-Roldan, Francisco Martï¿½n    | 42426768
+Roldan, Francisco Martín    | 42426768
 Zotelo, Julian Lorenzo      | 42536473
 
 */
@@ -21,13 +21,13 @@ BEGIN
     DECLARE @fecha DATE;
     DECLARE @contador INT;
 
-    -- Tomar el aï¿½o actual
+    -- Tomar el año actual
     SET @anio = YEAR(GETDATE());
 
     -- Limpiar el nombre del mes
     SET @mesNombre = LTRIM(RTRIM(@mesNombre));
 
-    -- Convertir nombre del mes a nï¿½mero
+    -- Convertir nombre del mes a número
     SET @mes = CASE LOWER(@mesNombre)
         WHEN 'enero' THEN 1 WHEN 'febrero' THEN 2 WHEN 'marzo' THEN 3
         WHEN 'abril' THEN 4 WHEN 'mayo' THEN 5 WHEN 'junio' THEN 6
@@ -40,11 +40,11 @@ BEGIN
     IF @mes IS NULL OR @mes < 1 OR @mes > 12
         RETURN NULL;
 
-    -- Primer dï¿½a del mes
+    -- Primer día del mes
     SET @fecha = DATEFROMPARTS(@anio, @mes, 1);
     SET @contador = 0;
 
-    -- Contar dï¿½as hï¿½biles
+    -- Contar días hábiles
     WHILE @contador < 5
     BEGIN
         IF DATEPART(WEEKDAY, @fecha) BETWEEN 2 AND 6

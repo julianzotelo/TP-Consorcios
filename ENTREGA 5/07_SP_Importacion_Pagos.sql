@@ -129,6 +129,7 @@ BEGIN
 
         COMMIT TRANSACTION;
 
+        -- Salida informativa
     
         PRINT 'Importación completada correctamente.';
         PRINT 'Gastos insertados: ' + CAST(@InsertadosGastos AS NVARCHAR(10));
@@ -142,7 +143,3 @@ BEGIN
     END CATCH
 END;
 GO
-
-
-EXEC dbo.SP_Cargar_Gastos_Desde_JSON 
-    @RutaArchivo = 'C:\TEMP\TP_DB\Servicios.Servicios.json';

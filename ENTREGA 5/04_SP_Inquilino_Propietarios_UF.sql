@@ -56,14 +56,12 @@ BEGIN
 
         DECLARE @RegistrosInsertados INT = 0;
 
-        INSERT INTO UnidadFuncionalPersona (ID_unidad_funcional, ID_consorcio, ID_PropietarioInquilino, rol, fecha_desde, fecha_hasta)
+        INSERT INTO UnidadFuncionalPersona (ID_unidad_funcional, ID_consorcio, ID_PropietarioInquilino, rol)
         SELECT 
             uf.ID_unidad_funcional,
             uf.ID_consorcio,
             pi.ID_PropietarioInquilino,
-            CASE WHEN pi.inquilino = 1 THEN 'INQUILINO' ELSE 'PROPIETARIO' END AS rol,
-            NULL AS fecha_desde,
-            NULL AS fecha_hasta
+            CASE WHEN pi.inquilino = 1 THEN 'INQUILINO' ELSE 'PROPIETARIO' END AS rol
         FROM #tmpVinculos t
         INNER JOIN PropietarioInquilino pi
             ON LTRIM(RTRIM(pi.CVU_CBU)) = LTRIM(RTRIM(t.[CVU/CBU]))
@@ -95,5 +93,8 @@ BEGIN
     END CATCH
 END;
 GO
+
+
+exec SP_Vincular_Unidades_PropietariosInquilinos @RutaArchivo = 'C:\TEMP\TP_DB\Inquilino-propietarios-UF.csv'
 
 

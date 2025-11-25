@@ -10,17 +10,24 @@ BEGIN
     BEGIN
         INSERT INTO TipoDetalleFinanciero (tipo_movimiento, nombre, descripcion)
         VALUES
-            ('INGRESO', 'Expensas en término', 
+            ('INGRESO', 'Expensas en tÃ©rmino', 
                 'Total recaudado antes del vencimiento'),
 
             ('INGRESO', 'Expensas adeudadas', 
-                'Pagos recibidos por saldo deudor de períodos anteriores'),
+                'Pagos recibidos por saldo deudor de perÃ­odos anteriores'),
 
             ('INGRESO', 'Expensas adelantadas', 
-                'Pagos recibidos correspondientes a períodos futuros'),
+                'Pagos recibidos correspondientes a perÃ­odos futuros'),
 
             ('EGRESO', 'Gastos del mes', 
-                'Total de los gastos generados en el mes');
+                'Total de los gastos generados en el mes'),
+
+             ('INGRESO', 'Saldo anterior', 
+                'Total de los saldos anteriores'),
+
+             ('INGRESO', 'Saldo al cierre', 
+                'Total de saldo al cierre');
+               
 
         PRINT 'Tabla TipoDetalleFinanciero inicializada correctamente.';
     END
