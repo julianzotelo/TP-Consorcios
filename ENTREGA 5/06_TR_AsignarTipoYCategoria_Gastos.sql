@@ -28,7 +28,7 @@ BEGIN
         ('GASTOS DE LIMPIEZA'),
         ('SEGUROS'),
         ('SERVICIOS PUBLICOS'),
-        ('GASTOS GENERALES'); -- añadimos esta para cubrir todas
+        ('GASTOS GENERALES');
 
     INSERT INTO CategoriaGastoOrdinario (nombre)
     SELECT c.nombre

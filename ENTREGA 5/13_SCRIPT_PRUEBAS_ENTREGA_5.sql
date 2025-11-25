@@ -239,8 +239,8 @@ GO
 -- =============================================
 
 -- Par�metros de prueba
-DECLARE @ID_consorcio INT = 1;           -- Cambiar por un consorcio que se desee generar
-DECLARE @periodo CHAR(20) = 'abril-2025';  -- Cambiar por el per�odo de prueba que uno quiera
+DECLARE @ID_consorcio INT = 1;
+DECLARE @periodo CHAR(20) = 'abril-2025';
 
 EXEC SP_Generar_Documentacion_CSV
      @ID_Consorcio = @ID_consorcio,

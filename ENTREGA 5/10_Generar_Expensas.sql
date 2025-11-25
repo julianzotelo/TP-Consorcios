@@ -632,12 +632,6 @@ BEGIN
             ('ESTADO_FINANCIERO','SaldoCierre', CAST(@SaldoCierre AS NVARCHAR(100)), 6),
             ('ESTADO_FINANCIERO','Periodo', @periodo, 6);
 
-        ----------------------------------------------------------------
-        -- Aqu� podr�as agregar m�s inserts a #ResultadoFinal para otras secciones
-        -- (por ejemplo: Detalle_expensas, EstadoUF, DetalleGastosPeriodo, etc.)
-        -- si quer�s que incluya todo detalle, te lo agrego.
-        ----------------------------------------------------------------
-
         -- Al final devolvemos SOLO la tabla unificada (�nico result set)
         SELECT Seccion, Clave, Valor, Orden
         FROM #ResultadoFinal
