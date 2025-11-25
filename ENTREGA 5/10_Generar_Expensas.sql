@@ -190,7 +190,7 @@ BEGIN
                 INNER JOIN Detalle_Gasto dg ON dg.ID_gasto = g.ID_gastos
                 WHERE g.ID_consorcio = @ID_consorcio
                   AND g.ID_tipo_gasto = 1
-                  AND LOWER(CONCAT(YEAR(g.fecha), '-', g.mes)) = LOWER(@periodo)
+                  AND LOWER(CONCAT(g.mes, '-', YEAR(g.fecha))) = LOWER(@periodo)
             ), 0);
 
         -------------------------------
@@ -234,7 +234,59 @@ BEGIN
                   AND g.ID_tipo_gasto = 2
                   AND LOWER(CONCAT(LTRIM(RTRIM(g.mes)), '-',YEAR(g.fecha))) = LOWER(@periodo)
             ), 0);
-        
+			
+        ------------------------------------------------------------------
+		-- ACTUALIZACI�N DE DETALLE_GASTO: pago_total, cuota_actual, cuota_total
+		------------------------------------------------------------------
+		
+		;WITH Pagos AS (
+			SELECT 
+				dg.ID_detalle_gasto,
+				dg.ID_gasto,
+				dg.importe,
+				COALESCE(SUM(p.importe),0) AS pagado
+			FROM Detalle_Gasto dg
+            left join Gastos g on g.ID_gastos = dg.ID_gasto
+			LEFT JOIN Pagos_importados p ON p.ID_consorcio = g.ID_consorcio 
+			GROUP BY dg.ID_detalle_gasto, dg.ID_gasto, dg.importe
+		),--select * from Pagos_importados
+		--Cuotas AS (
+		--	SELECT
+		--		dg.ID_detalle_gasto,
+		--		dg.ID_gasto,
+		--		dg.importe,
+		--		dg.cuota_actual,
+		--		CASE 
+		--			WHEN g.cant_cuotas <= 1 THEN 1
+		--			ELSE 
+		--				ROW_NUMBER() OVER (PARTITION BY dg.ID_gasto ORDER BY dg.ID_detalle_gasto)
+		--		END AS cuota_actual
+		--	FROM Detalle_Gasto dg
+		--	INNER JOIN Gastos g ON g.ID_gastos = dg.ID_gasto
+		--),
+		Resultado AS (
+			SELECT 
+				p.ID_detalle_gasto,
+				p.ID_gasto,
+				CASE WHEN p.pagado >= p.importe THEN 1 ELSE 0 END AS pago_total--,
+				--c.cuota_actual,
+				--c.cuota_total
+			FROM Pagos p
+			--INNER JOIN Cuotas c ON c.ID_detalle_gasto = p.ID_detalle_gasto
+		)
+		UPDATE dg
+			SET dg.pago_total = r.pago_total--,
+				--dg.cuota_actual = r.cuota_actual,
+				--dg.cuota_total = r.cuota_total
+		FROM Detalle_Gasto dg
+		INNER JOIN Resultado r ON r.ID_detalle_gasto = dg.ID_detalle_gasto
+		WHERE dg.ID_gasto IN (
+			SELECT g.ID_gastos
+			FROM Gastos g
+			WHERE g.ID_consorcio = @ID_consorcio
+			AND LOWER(CONCAT(LTRIM(RTRIM(g.mes)), '-', YEAR(g.fecha))) = LOWER(@periodo)
+		);
+        --select * from Detalle_Gasto
         -------------------------------
         -- GENERAR EXPENSAS POR UF (prorrateo por m2) y Detalles_expensas
         -------------------------------
@@ -379,14 +431,15 @@ BEGIN
         FROM Detalle_Gasto dg
         INNER JOIN Gastos g ON g.ID_gastos = dg.ID_gasto
         WHERE g.ID_consorcio = @ID_consorcio
-          AND LOWER(CONCAT(YEAR(g.fecha), '-', g.mes)) = LOWER(@periodo);
+          AND LOWER(CONCAT(g.mes, '-', YEAR(g.fecha))) = LOWER(@periodo);
+          
        
         -- Insert prorrateos por UF (mantengo la l�gica original)
         INSERT INTO Detalles_expensas (ID_expensas, ID_detalle_gasto, concepto, monto, descripcion)
         SELECT
             ei.ID_expensas,
             dgp.ID_detalle_gasto,
-            CASE WHEN dgp.ID_tipo_gasto = 1 THEN ISNULL((SELECT nombre FROM CategoriaGastoOrdinario c WHERE c.ID_categoria = dgp.ID_categoria), 'ORDINARIO')
+            CASE WHEN dgp.ID_tipo_gasto = 1 THEN  'ORDINARIO'
                  ELSE 'EXTRAORDINARIO' END AS concepto,
             ROUND( (dgp.importe * (u.m2_total_uf / NULLIF(ct.m2_total_consorcio,0)) ), 2 ) AS monto,
             dgp.descripcion
@@ -631,6 +684,44 @@ BEGIN
             ('ESTADO_FINANCIERO','EgresosDelMes', CAST(@EgresosMes AS NVARCHAR(100)), 6),
             ('ESTADO_FINANCIERO','SaldoCierre', CAST(@SaldoCierre AS NVARCHAR(100)), 6),
             ('ESTADO_FINANCIERO','Periodo', @periodo, 6);
+       
+     -------------------------------
+     -- LISTADO DE PROPIETARIOS DEUDORES
+     -------------------------------
+    IF EXISTS (
+    SELECT 1
+    FROM #EstadoUF ef
+    WHERE ef.total_pagar > 0
+    )
+    BEGIN
+         INSERT INTO #ResultadoFinal (Seccion, Clave, Valor, Orden)
+         SELECT 
+             'PROPIETARIOS_DEUDORES' AS Seccion,
+             CONCAT('UF_', ef.ID_unidad_funcional) AS Clave,
+             CONCAT(
+                 uf.departamento, ' - ', uf.piso, ' | ', 
+                 pinq.nombre, ' ', pinq.apellido, 
+                 ' | Total a pagar: $', CAST(ef.total_pagar AS NVARCHAR(100))
+             ) AS Valor,
+             7 AS Orden
+         FROM #EstadoUF ef
+         INNER JOIN Unidad_funcional uf ON uf.ID_unidad_funcional = ef.ID_unidad_funcional
+         LEFT JOIN UnidadFuncionalPersona p ON p.ID_unidad_funcional = uf.ID_unidad_funcional
+         left join PropietarioInquilino pinq on p.ID_PropietarioInquilino = pinq.ID_propietarioInquilino
+         WHERE ef.total_pagar > 0 and p.rol = 'PROPIETARIO'
+        ORDER BY ef.total_pagar DESC;
+        END
+     ELSE
+     BEGIN
+         INSERT INTO #ResultadoFinal (Seccion, Clave, Valor, Orden)
+         VALUES (
+             'PROPIETARIOS_DEUDORES', 
+             'NINGUNO', 
+             'No hay deudores para este per�odo', 
+             7
+         );
+     END
+
 
         -- Al final devolvemos SOLO la tabla unificada (�nico result set)
         SELECT Seccion, Clave, Valor, Orden
@@ -646,4 +737,4 @@ BEGIN
         RETURN;
     END CATCH
 END;
-GO
+-- GO

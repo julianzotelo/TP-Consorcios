@@ -409,7 +409,7 @@ CREATE TABLE Mora (
         [Saldo anterior abonado] DECIMAL(18,2),
         [Pagos recibidos] DECIMAL(18,2),
         Deuda DECIMAL(18,2),
-        [Inter�s por mora] DECIMAL(18,2),
+        [Interes por mora] DECIMAL(18,2),
         [Expensas ordinarias] DECIMAL(18,2),
         [Expensas extraordinarias] DECIMAL(18,2),
         [Total a Pagar] DECIMAL(18,2)

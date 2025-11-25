@@ -217,6 +217,8 @@ FROM Servicios;
 SELECT COUNT(*) AS Cant_TipoGasto
 FROM TipoGasto;
 
+SELECT COUNT(*) AS Cant_DetalleGastos
+FROM Detalle_Gasto;
 PRINT 'Validaciones ejecutadas correctamente';
 
 go
@@ -234,6 +236,8 @@ go
 EXEC SP_Inicializar_TipoDetalleFinanciero;
 GO
 
+
+select count(*) AS Cant_TipoDetalleFinanciero from TipoDetalleFinanciero
 -- =============================================
 -- Script de testing para generar las expensas y la documentacion que pide el enunciado
 -- =============================================

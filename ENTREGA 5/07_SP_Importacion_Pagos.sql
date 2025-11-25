@@ -78,8 +78,18 @@ BEGIN
             [SERVICIOS PUBLICOS-Luz] NVARCHAR(50) '$."SERVICIOS PUBLICOS-Luz"'
         );
 
+		--tabla temporal para capturar gastos insertados
+		IF OBJECT_ID('tempdb..#tmpGastosInsertados') IS NOT NULL DROP TABLE #tmpGastosInsertados;
+
+        CREATE TABLE #tmpGastosInsertados (
+            ID_gasto INT,
+            ID_consorcio INT,
+            Categoria NVARCHAR(100),
+            Mes NVARCHAR(20),
+            Monto DECIMAL(10,2)
+        );
    
-        -- Insertar en Gastos
+        -- Insertar en Gastos + OUTPUT para capturar IDs
    
         WITH GastosUnpivot AS (
             SELECT 
@@ -96,6 +106,13 @@ BEGIN
             ) AS unpvt
         )
         INSERT INTO Gastos (ID_consorcio, ID_tipo_gasto, ID_categoria, monto_total, concepto, fecha, mes)
+        OUTPUT 
+            inserted.ID_gastos,
+            inserted.ID_consorcio,
+            inserted.concepto,
+            inserted.mes,
+            inserted.monto_total
+        INTO #tmpGastosInsertados
         SELECT 
             c.ID_consorcio,
             NULL,
@@ -105,7 +122,8 @@ BEGIN
             GETDATE(),
             g.Mes
         FROM GastosUnpivot g
-        INNER JOIN Consorcios c ON c.nombre = g.[Nombre del consorcio]
+        INNER JOIN Consorcios c 
+            ON c.nombre = g.[Nombre del consorcio]
         WHERE TRY_CAST(Valor AS DECIMAL(10,2)) IS NOT NULL
         AND NOT EXISTS (
             SELECT 1 
@@ -115,10 +133,29 @@ BEGIN
               AND gx.mes = g.Mes
         );
 
-
-        -- Cantidad insertada en Gastos
- 
         SET @InsertadosGastos = @@ROWCOUNT;
+		
+		--inserto los detalles del GASTOS
+		 INSERT INTO Detalle_Gasto (
+            ID_gasto,
+            empresa_persona,
+            descripcion,
+            importe,
+            nro_factura,
+            pago_total,
+            cuota_actual,
+            cuota_total
+        )
+        SELECT
+            ID_gasto,
+            NULL AS empresa_persona,
+            Categoria AS descripcion,
+            Monto AS importe,
+            NULL AS nro_factura,
+            1 AS pago_total,
+            NULL AS cuota_actual,
+            NULL AS cuota_total
+        FROM #tmpGastosInsertados;
 
 
         -- Contar servicios después (trigger)

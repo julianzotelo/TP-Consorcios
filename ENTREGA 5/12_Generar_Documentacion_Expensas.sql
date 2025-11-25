@@ -76,7 +76,7 @@ BEGIN
         [Saldo anterior abonado],
         [Pagos recibidos],
         Deuda,
-        [Inter�s por mora],
+        [Interes por mora],
         [Expensas ordinarias],
         [Expensas extraordinarias],
         [Total a Pagar]
@@ -105,7 +105,7 @@ BEGIN
 
     -- Exportar datos
     SET @Cmd = 
-        'bcp "SELECT UF,Porcentaje,[Piso-Depto],Cocheras,Bauleras,Propietario,[Saldo anterior abonado],[Pagos recibidos],Deuda,[Inter�s por mora],[Expensas ordinarias],[Expensas extraordinarias],[Total a Pagar] FROM Com3641G01..Export_EstadoCuentaProrrateo" ' +
+        'bcp "SELECT UF,Porcentaje,[Piso-Depto],Cocheras,Bauleras,Propietario,[Saldo anterior abonado],[Pagos recibidos],Deuda,[Interes por mora],[Expensas ordinarias],[Expensas extraordinarias],[Total a Pagar] FROM Com3641G01..Export_EstadoCuentaProrrateo" ' +
         'queryout "' + @RutaArchivoProrrateo + '" -c -t, -T -S "' + @@SERVERNAME + '"';
 
     EXEC xp_cmdshell @Cmd;

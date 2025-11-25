@@ -256,7 +256,7 @@ BEGIN
             SaldoAnterior AS [Saldo anterior abonado],
             PagosRecibidos AS [Pagos recibidos],
             Deuda,
-            InteresPorMora AS [Interés por mora],
+            InteresPorMora AS [Interes por mora],
             ExpensasOrdinarias AS [Expensas ordinarias],
             ExpensasExtraordinarias AS [Expensas extraordinarias],
             TotalAPagar AS [Total a Pagar]
@@ -274,3 +274,8 @@ BEGIN
     END CATCH
 END;
 GO
+
+
+--exec SP_Generar_EstadoCuenta_Prorrateo
+-- @ID_consorcio = 1,
+--    @periodo = 'abril-2025'  -- formato: 'marzo-2025'
